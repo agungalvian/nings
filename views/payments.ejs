@@ -51,9 +51,9 @@
                         <td>
                             <% if (p.status==='pending' && user.role==='admin' ) { %>
                                 <button class="btn-sm btn-success"
-                                    onclick="openConfirmModal('<%= p.id %>', 'approved')">Terima</button>
+                                    onclick="confirmPayment('<%= p.id %>', 'approved')">Terima</button>
                                 <button class="btn-sm btn-danger"
-                                    onclick="openConfirmModal('<%= p.id %>', 'rejected')">Tolak</button>
+                                    onclick="confirmPayment('<%= p.id %>', 'rejected')">Tolak</button>
                                 <% } else { %>
                                     <span class="badge badge-<%= p.status %>">
                                         <%= p.status %>
@@ -67,35 +67,44 @@
     </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h3 id="modalTitle">Konfirmasi</h3>
-        <form action="/payments/update" method="POST">
-            <input type="hidden" name="id" id="paymentId">
-            <input type="hidden" name="status" id="paymentStatus">
-
-            <div class="form-group">
-                <label>Catatan (Opsional)</label>
-                <textarea name="admin_note" class="form-control" rows="3"></textarea>
-            </div>
-
-            <button type="submit" class="btn-primary w-100">Simpan Status</button>
-        </form>
-    </div>
-</div>
+<!-- Hidden form for submission -->
+<form id="paymentActionForm" action="/payments/update" method="POST" style="display: none;">
+    <input type="hidden" name="id" id="paymentId">
+    <input type="hidden" name="status" id="paymentStatus">
+    <input type="hidden" name="admin_note" id="adminNote">
+</form>
 
 <script>
-    function openConfirmModal(id, status) {
-        document.getElementById('paymentId').value = id;
-        document.getElementById('paymentStatus').value = status;
-        document.getElementById('modalTitle').innerText = status === 'approved' ? 'Terima Pembayaran' : 'Tolak Pembayaran';
-        document.getElementById('confirmModal').style.display = 'block';
-    }
+    function confirmPayment(id, status) {
+        const isApprove = status === 'approved';
+        const title = isApprove ? 'Terima Pembayaran?' : 'Tolak Pembayaran?';
+        const icon = isApprove ? 'question' : 'warning';
+        const confirmColor = isApprove ? '#48bb78' : '#f56565';
+        const confirmText = isApprove ? 'Ya, Terima' : 'Ya, Tolak';
 
-    function closeModal() {
-        document.getElementById('confirmModal').style.display = 'none';
+        Swal.fire({
+            title: title,
+            input: 'textarea',
+            inputLabel: 'Catatan Admin (Opsional)',
+            inputPlaceholder: 'Tulis catatan disini...',
+            inputAttributes: {
+                'aria-label': 'Tulis catatan disini'
+            },
+            icon: icon,
+            showCancelButton: true,
+            confirmButtonColor: confirmColor,
+            cancelButtonColor: '#aaa',
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Set values and submit form
+                document.getElementById('paymentId').value = id;
+                document.getElementById('paymentStatus').value = status;
+                document.getElementById('adminNote').value = result.value || '';
+                document.getElementById('paymentActionForm').submit();
+            }
+        });
     }
 </script>
 

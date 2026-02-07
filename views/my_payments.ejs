@@ -302,6 +302,8 @@
 
     .bank-details {
         flex: 1;
+        min-width: 0;
+        /* Important for flex child text truncation/wrapping */
     }
 
     .bank-header {
@@ -316,17 +318,25 @@
         font-weight: 700;
         font-size: 1.1rem;
         margin-bottom: 0.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .account-number {
         font-family: 'Monaco', 'Consolas', monospace;
-        font-size: 1.4rem;
+        font-size: 1.25rem;
+        /* Slightly smaller to fit better */
         font-weight: 700;
         letter-spacing: 1px;
         margin-bottom: 0.25rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
+        /* Allow wrapping */
+        word-break: break-all;
+        /* Ensure long numbers break if needed */
     }
 
     .account-name {

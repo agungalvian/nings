@@ -4,9 +4,20 @@
     </div>
     <div class="card-body">
         <% if (typeof req !=='undefined' && req.query.success) { %>
-            <div class="alert alert-success">
-                <%= req.query.success %>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: '<%= req.query.success %>',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#2f855a'
+                    }).then(() => {
+                        // Optional: Clean URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    });
+                });
+            </script>
             <% } %>
 
                 <form action="/settings/update" method="POST">
