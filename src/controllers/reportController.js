@@ -130,6 +130,86 @@ exports.viewReports = (req, res) => {
     }
 };
 
+exports.exportReports = (req, res) => {
+    const month = req.query.month || '';
+    const year = req.query.year || '';
+    const ExcelJS = require('exceljs');
+
+    // Reuse filter logic (duplicated for now to avoid major refactor, ideally extract to helper)
+    let whereClause = '';
+    let params = [];
+
+    if (month && year) {
+        whereClause = 'WHERE EXTRACT(YEAR FROM m.date) = ? AND EXTRACT(MONTH FROM m.date) = ?';
+        params.push(year, month);
+    } else if (year) {
+        whereClause = 'WHERE EXTRACT(YEAR FROM m.date) = ?';
+        params.push(year);
+    } else if (month) {
+        whereClause = 'WHERE EXTRACT(MONTH FROM m.date) = ?';
+        params.push(month);
+    }
+
+    const query = `
+        SELECT m.*, u.full_name as resident_name 
+        FROM mutations m 
+        LEFT JOIN payments p ON m.payment_id = p.id 
+        LEFT JOIN users u ON p.user_id = u.id 
+        ${whereClause} 
+        ORDER BY m.date DESC
+    `;
+
+    db.all(query, params, async (err, rows) => {
+        if (err) return res.status(500).send('Database Error');
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Laporan Keuangan');
+
+        // Headers
+        worksheet.columns = [
+            { header: 'Tanggal', key: 'date', width: 15 },
+            { header: 'Keterangan', key: 'description', width: 30 },
+            { header: 'Warga', key: 'resident', width: 20 },
+            { header: 'Sumber Dana', key: 'fund_type', width: 15 },
+            { header: 'Kategori', key: 'category', width: 15 },
+            { header: 'Masuk', key: 'in', width: 15 },
+            { header: 'Keluar', key: 'out', width: 15 }
+        ];
+
+        // Data
+        rows.forEach(r => {
+            worksheet.addRow({
+                date: new Date(r.date).toLocaleDateString('id-ID'),
+                description: r.description,
+                resident: r.resident_name || '-',
+                fund_type: r.fund_type === 'housing' ? 'Perumahan' :
+                    r.fund_type === 'social' ? 'Sosial' :
+                        r.fund_type === 'rt' ? 'RT' : r.fund_type,
+                category: r.category,
+                in: r.type === 'in' ? r.amount : 0,
+                out: r.type === 'out' ? r.amount : 0
+            });
+        });
+
+        // Computed Totals
+        const totalIn = rows.filter(r => r.type === 'in').reduce((sum, r) => sum + r.amount, 0);
+        const totalOut = rows.filter(r => r.type === 'out').reduce((sum, r) => sum + r.amount, 0);
+
+        worksheet.addRow({});
+        worksheet.addRow({ description: 'TOTAL', in: totalIn, out: totalOut });
+
+        // Style Totals
+        const totalRow = worksheet.lastRow;
+        totalRow.font = { bold: true };
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=Laporan_Keuangan_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+    });
+};
+
 exports.viewMutations = (req, res) => {
     const query = `
         SELECT m.*, u.full_name as resident_name 
