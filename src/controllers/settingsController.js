@@ -20,12 +20,15 @@ exports.getSettings = (req, res) => {
 };
 
 exports.updateSettings = (req, res) => {
-    const { housing_dues, social_dues, rt_dues } = req.body;
+    const { housing_dues, social_dues, rt_dues, bank_name, bank_account_number, bank_account_name } = req.body;
 
     const updates = [
         { key: 'housing_dues', value: housing_dues },
         { key: 'social_dues', value: social_dues },
-        { key: 'rt_dues', value: rt_dues }
+        { key: 'rt_dues', value: rt_dues },
+        { key: 'bank_name', value: bank_name },
+        { key: 'bank_account_number', value: bank_account_number },
+        { key: 'bank_account_name', value: bank_account_name }
     ];
 
     db.serialize(() => {

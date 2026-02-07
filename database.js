@@ -170,7 +170,10 @@ async function initDb() {
                 await pool.query(`INSERT INTO settings (key, value) VALUES 
                     ('housing_dues', '50000'),
                     ('social_dues', '10000'),
-                    ('rt_dues', '10000')`);
+                    ('rt_dues', '10000'),
+                    ('bank_name', 'BCA'),
+                    ('bank_account_number', '1234567890'),
+                    ('bank_account_name', 'Pengurus RT')`);
             }
 
             // Seed Admin User

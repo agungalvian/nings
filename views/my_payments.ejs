@@ -17,6 +17,18 @@
                             </div>
                             <% } %>
 
+                                <!-- Bank Information Display -->
+                                <div class="alert alert-info">
+                                    <h5 style="margin-top: 0; font-size: 1rem;"><i class="fas fa-info-circle"></i>
+                                        Rekening Transfer:</h5>
+                                    <p style="margin-bottom: 0;"><strong>
+                                            <%= settings.bank_name %>
+                                        </strong>: <%= settings.bank_account_number %>
+                                    </p>
+                                    <p style="margin-bottom: 0;">a.n <%= settings.bank_account_name %>
+                                    </p>
+                                </div>
+
                                 <form action="/submit" method="POST" enctype="multipart/form-data" id="paymentForm">
                                     <div class="form-group">
                                         <label>Pilih Bulan yang Akan Dibayar (Maksimal 6 Bulan)</label>
